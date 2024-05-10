@@ -15,8 +15,8 @@ CHAT_OUTPUT = -4125418031
 ADMIN_GROUP_ID = -4192581904
 ADMIN_ID = [1333538265, 1006078469, 775207817]
 apihelper.ENABLE_MIDDLEWARE = True
-
-bot = telebot.TeleBot("")
+#7112337088:AAGW4S-bRMK0dhpXx0nvCSdkfU-DCIAkaZM
+bot = telebot.TeleBot("6806170010:AAGPkBft-l4LF3ufXev-Db9C5ZKcF9cvOqc")
 #775207817
 
 #questions another
@@ -87,11 +87,10 @@ def send_welcome(message):
     #work info all realese
     if message == None:
         return stock(message)
-    with open("FirstPictureInfo.jpeg", "rb") as file:
+    with open("FirstPictureInfo.jpg", "rb") as file:
         bot.send_photo(message.chat.id, photo=file.read())
 
-    pin_msg = bot.send_message(message.chat.id, '0973477073 - номер Романа'
-                                                '\n0669450677 - підтримка(програміст, якщо щось працює не так)')
+    pin_msg = bot.send_message(message.chat.id, '0973477073 - Роман (доставка)\n0669450677 - підтримка (програміст)')
 
     try:
         bot.unpin_all_chat_messages(chat_id=message.chat.id)
@@ -104,9 +103,9 @@ def send_welcome(message):
     print("Chat id =="+str(message.chat.id))
 
     #тоже релиз но потом
-    text = "Текст текст много о воде Текст текст много о воде Текст текст много о воде" \
-           "Текст текст много о воде Текст текст много о воде Текст текст много о воде" \
-           "Текст текст много о воде Текст текст много о воде Текст текст много о воде"
+    text = "Доставка води м. Одеса \nЗвичайне замовлення бутлів 18,9 л формується на наступний день. " \
+           "Можлива термінова доставка на сьогодні, але не зловживайте цією функцією, будь ласка." \
+           "\n   Раді почати співпрацю."
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     bcBtn = types.KeyboardButton('🏢бізнес центр')
     cBtn = types.KeyboardButton("☕кав'ярня")
@@ -114,7 +113,7 @@ def send_welcome(message):
 
 
     markup.add(bcBtn, cBtn, othersBtn)
-    bot.send_message(message.chat.id, "Welcome msg", reply_markup=markup)
+    bot.send_message(message.chat.id, text, reply_markup=markup)
     bot.register_next_step_handler(message, fast_reg)
 
 
@@ -350,8 +349,6 @@ def ask_address(message):
         "full_address": "",
         "count": ""
     }
-
-    #msg = bot.reply_to(message, 'How old are you?', reply_markup=markup)
 
     context ={}
     context.update(field_ticket)
@@ -631,7 +628,6 @@ def crudAddress(message):
 
         bot.register_next_step_handler(message, createAddress)
     elif msg == 'Змінити частину адреси (вулицю, №будинку та інше)':
-        # ||  частину на кнопках
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
 
         user = User.get(User.user_tg_id == str(message.from_user.id.numerator))
