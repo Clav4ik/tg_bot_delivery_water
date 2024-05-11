@@ -1,4 +1,3 @@
-# This is a sample Python script.
 
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
@@ -10,7 +9,6 @@ from telebot import apihelper
 from Checkers import isvalid_phone_number, isvalid_order, isvalid_address, isvalid_count
 from models import User, Address, Phone_Number, Black_List, Token_Unblock
 
-#CHAT_OUTPUT = -1002141829518
 CHAT_OUTPUT = -4125418031
 ADMIN_GROUP_ID = -4192581904
 ADMIN_ID = [1333538265, 1006078469, 775207817]
@@ -20,11 +18,6 @@ bot = telebot.TeleBot("")
 #775207817
 
 #questions another
-#картинка на лого
-#картинка на wlcome msg первое стартовое
-#текст на первое стартовое welcome msg сам
-#как будет ссылка на бота выглядеть
-#
 #
 @bot.middleware_handler(update_types=['message'])
 def modify_message(bot_instance, message):
@@ -37,7 +30,6 @@ def modify_message(bot_instance, message):
             return stock(message)
 
         bot.clear_step_handler(message)
-        #bot.clear_step_handler_by_chat_id(message.chat.id)
         msg = message.text.strip()
         if  msg[0:7] == "unblock":
             key = msg.split("\n")
@@ -87,26 +79,21 @@ def send_welcome(message):
     #work info all realese
     if message == None:
         return stock(message)
-    with open("FirstPictureInfo.jpeg", "rb") as file:
-        bot.send_photo(message.chat.id, photo=file.read())
 
-    pin_msg = bot.send_message(message.chat.id, '0973477073 - номер Романа'
-                                                '\n0669450677 - підтримка(програміст, якщо щось працює не так)')
-
+    pin_msg = bot.send_message(message.chat.id, '0973477073 - Роман (доставка)')
     try:
         bot.unpin_all_chat_messages(chat_id=message.chat.id)
     except:
         pass
     bot.pin_chat_message(chat_id=message.chat.id, message_id=pin_msg.message_id)
-    print(dir(bot))
-    print(dir(message.from_user))
-    print(dir(message.chat))
+
+    with open("FirstPictureInfo.jpg", "rb") as file:
+        bot.send_photo(message.chat.id, photo=file.read())
+
     print("Chat id =="+str(message.chat.id))
 
-    #тоже релиз но потом
-    text = "Текст текст много о воде Текст текст много о воде Текст текст много о воде" \
-           "Текст текст много о воде Текст текст много о воде Текст текст много о воде" \
-           "Текст текст много о воде Текст текст много о воде Текст текст много о воде"
+    text = "Доставка води м. Одеса \nЗвичайне замовлення бутлів 18,9л формується на наступний день. " \
+           "Можлива термінова доставка на сьогодні, але не зловживайте цією функцією, будь ласка."
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     bcBtn = types.KeyboardButton('🏢бізнес центр')
     cBtn = types.KeyboardButton("☕кав'ярня")
@@ -114,7 +101,8 @@ def send_welcome(message):
 
 
     markup.add(bcBtn, cBtn, othersBtn)
-    bot.send_message(message.chat.id, "Welcome msg", reply_markup=markup)
+    bot.send_message(message.chat.id, text, reply_markup=markup)
+    bot.send_message(message.chat.id, "Раді почати співпрацю.")
     bot.register_next_step_handler(message, fast_reg)
 
 
@@ -123,7 +111,6 @@ def fast_reg(message):
         User.create(
             user_tg_id=str(message.from_user.id.numerator)
         )
-#Скопіюйте шаблон та введіть свої дані обов'язково з нового рядка та двокрапкою
     bot.send_message(message.chat.id, "Скопіюйте шаблон та введіть свої дані обов'язково з нового рядка та двокрапкою. \nШаблон")
     context = {}
     if message.text == "☕кав'ярня":
@@ -132,18 +119,12 @@ def fast_reg(message):
                                           "\nДім: 62а\nКількість: 3",
                          reply_markup=types.ReplyKeyboardRemove())
 
-        # bot.send_message(message.chat.id,
-        #                  "Будь ласка, як у прикладі з нового рядка значення \nі обов'язково=> : <=щоб було двокрапка",
-        #                  reply_markup=types.ReplyKeyboardRemove())
 
     elif message.text == '🏢бізнес центр':
         context.update({"object": "БЦ"})
         bot.send_message(message.chat.id, "Телефон: 0661116699\nНазва: Аврора \nВулиця: Академіка Комарова"
                                           "\nДім: 62а \n№Офіса: 6н\nКількість: 3",
                          reply_markup=types.ReplyKeyboardRemove())
-
-
-        # bot.send_message(message.chat.id, "Телефон: \n Название: \n Количество: \n Улица: \n Дом: \n №Офиса: ")
 
     elif message.text == 'Інше':
         context.update({"object": "other"})
@@ -171,8 +152,18 @@ def test_coplete_order(message, context):
         bot.send_message(message.chat.id, "Переходимо до початку")
         return send_welcome(message)
 
-    context.update({"full_ticket": msg})
+    #arr here because validation simple and not wonna create record in DB
     arr_values = msg.split("\n")
+    if not isvalid_count(str(arr_values[-1].split(":")[1]).strip()):
+        bot.reply_to(message, "Помилку у числі кількості")
+        bot.send_message(message.chat.id,
+                         "Скопіюйте Ваше повідомлення та введіть вірну кількість бутлів\nВаше попереднє повідомлення",
+                         reply_markup=types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, context.get("full_ticket"))
+        return step_invalid_count(message, context)
+
+    context.update({"full_ticket": msg})
+
 
     if not isvalid_phone_number(str(arr_values[0].split(":")[1]).strip()):
         bot.reply_to(message, "Номер не відповідає формату\n0661116699")
@@ -181,13 +172,6 @@ def test_coplete_order(message, context):
                          reply_markup=types.ReplyKeyboardRemove())
         bot.send_message(message.chat.id, context.get("full_ticket"))
         return step_invalid_phone_number(message, context)
-    if not isvalid_count(str(arr_values[-1].split(":")[1]).strip()):
-        bot.reply_to(message, "Помилку у числі кількості")
-        bot.send_message(message.chat.id,
-                         "Скопіюйте Ваше повідомлення та введіть вірну кількість бутлів\nВаше попереднє повідомлення",
-                         reply_markup=types.ReplyKeyboardRemove())
-        bot.send_message(message.chat.id, context.get("full_ticket"))
-        return step_invalid_count(message, context)
 
     context.update({"phone_number":str(arr_values[0].split(":")[1]).strip()})
 
@@ -233,10 +217,9 @@ def coplete_order(message, context):
 
     msg = message.text.strip()
 
-
     if msg == "Підтвердити заявку\n(на завтра)" or  msg == "🔥Термінове замовлення🔥\n(на сьогодні)":
         user = User.get(User.user_tg_id == str(message.from_user.id.numerator))
-        if not Phone_Number.select().where(Phone_Number.phone_number == context.get("phone_number") and Phone_Number.user_id == user):
+        if not Phone_Number.select().where(Phone_Number.phone_number == context.get("phone_number"), Phone_Number.user_id == user):
             Phone_Number.create(
                 phone_number=context.get("phone_number"),
                 user=user
@@ -350,8 +333,6 @@ def ask_address(message):
         "full_address": "",
         "count": ""
     }
-
-    #msg = bot.reply_to(message, 'How old are you?', reply_markup=markup)
 
     context ={}
     context.update(field_ticket)
@@ -473,7 +454,6 @@ def complite(message, context):
             message_to_group += "\n 🔥🔥🔥"
             message_user = "Термінове замовлення відправлено"
         bot.send_message(CHAT_OUTPUT, message_to_group)
-        # bot.forward_message(CHAT_OUTPUT, message.chat.id, message.message_id)
 
         bot.send_message(message.chat.id, message_user)
         bot.send_message(message.chat.id, "Дякуємо, що обрали нас")
@@ -559,7 +539,7 @@ def createPhoneNumber(message):
     markup.add(Btn)
 
     user = User.get(User.user_tg_id == str(message.from_user.id.numerator))
-    if not Phone_Number.select().where(Phone_Number.user_id == user.id).where(Phone_Number.phone_number == msg):
+    if not Phone_Number.select().where(Phone_Number.user_id == user.id, Phone_Number.phone_number == msg):
         Phone_Number.create(
             phone_number=msg,
             user=user
@@ -631,7 +611,6 @@ def crudAddress(message):
 
         bot.register_next_step_handler(message, createAddress)
     elif msg == 'Змінити частину адреси (вулицю, №будинку та інше)':
-        # ||  частину на кнопках
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
 
         user = User.get(User.user_tg_id == str(message.from_user.id.numerator))
@@ -719,7 +698,7 @@ def copletecreateAddress(message, context):
         bot.send_message(message.chat.id, "Невірно ведена адреса")
         bot.send_message(message.chat.id, "Скопіюйте повідомлення та введіть свої дані для коректного введення адреси")
         return choiseCrudAddress(message)
-    #need valid
+
     arr_values = msg.split("\n")
 
 
@@ -778,7 +757,6 @@ def stepupdateAddress(message, context):
     bot.send_message(message.chat.id, "Скопіюйте повідомлення та введіть коректні дані. Обов'язково з нового рядка та двокрапкою")
     msg = message.text.strip()
     if msg == "🏢бізнес центр":
-        #context.get(context.get("pk"))
         context.update({"object":"БЦ"})
         bot.send_message(message.chat.id, f"Назва: {address.name} \nВулиця: {address.street}"
                                           f"\nДім: {address.house_num} \n№Офіса: {address.office_num}",
@@ -789,7 +767,7 @@ def stepupdateAddress(message, context):
                                           f"\nДім: {address.house_num}",
                      reply_markup=types.ReplyKeyboardRemove())
         context.update({"object": "К"})
-        # bot.send_message(message.chat.id, "Телефон: \n Название: \n Количество: \n Улица: \n Дом: \n №Офиса: ")
+
     elif msg == "Інше":
         bot.send_message(message.chat.id, f"Назва: {address.name} \nВулиця: {address.street}"
                                           f"\nДім: {address.house_num}",
@@ -847,7 +825,6 @@ def deleteAddress(message, context):
 #admin
 def admin_panel(message):
 
-    #bot.clear_step_handler(message)
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
     Btn = types.KeyboardButton('Додати у Black List')
     Btnt = types.KeyboardButton('Сгенерувати одноразовий токен')
@@ -890,9 +867,6 @@ def to_ban_acc(message):
 
 
 if __name__ == "__main__":
-    # bot.enable_save_next_step_handlers(delay=2)
-    # bot.load_next_step_handlers()
     bot.infinity_polling()
 
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
