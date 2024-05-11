@@ -12,13 +12,14 @@ from models import User, Address, Phone_Number, Black_List, Token_Unblock
 CHAT_OUTPUT = -4125418031
 ADMIN_GROUP_ID = -4192581904
 ADMIN_ID = [1333538265, 1006078469, 775207817]
+
+PHONE_NUMBER_ADMIN_str = "0973477073"
+
 apihelper.ENABLE_MIDDLEWARE = True
 
 bot = telebot.TeleBot("")
-#775207817
 
-#questions another
-#
+
 @bot.middleware_handler(update_types=['message'])
 def modify_message(bot_instance, message):
     if not message.text:
@@ -38,7 +39,7 @@ def modify_message(bot_instance, message):
 
         bot.delete_message(message.chat.id, message.id)
         bot.send_message(message.chat.id, "Ви заблоковані", reply_markup=types.ReplyKeyboardRemove())
-        bot.send_message(message.chat.id, "Для розблокування зв'яжитесь з менеджером\n0557777888")
+        bot.send_message(message.chat.id, "Для розблокування зв'яжитесь з менеджером\n"+PHONE_NUMBER_ADMIN_str)
         bot.register_next_step_handler(message, stock)
 
 def stock(message):
@@ -76,11 +77,10 @@ def helper_out_msg_branch(message):
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    #work info all realese
     if message == None:
         return stock(message)
 
-    pin_msg = bot.send_message(message.chat.id, '0973477073 - Роман (доставка)')
+    pin_msg = bot.send_message(message.chat.id, PHONE_NUMBER_ADMIN_str+' - Роман (доставка)')
     try:
         bot.unpin_all_chat_messages(chat_id=message.chat.id)
     except:
@@ -336,7 +336,6 @@ def ask_address(message):
 
     context ={}
     context.update(field_ticket)
-    print(context)
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
 
@@ -410,7 +409,6 @@ def ask_count(message, context):
 
 def check_order(message, context):
     msg = message.text.strip()
-    print(context.get("object"))
     if not isvalid_count(msg):
         bot.reply_to(message, "Не схоже на ціле додатне число")
         return ask_count(message, context)
@@ -670,17 +668,20 @@ def createAddress(message):
         context.update({"object": "К"})
 
         bot.send_message(message.chat.id, "Назва: Аврора\nВулиця: Академіка Комарова"
-                                          "\nДім: 62а")
+                                          "\nДім: 62а",
+                         reply_markup=types.ReplyKeyboardRemove())
 
     elif message.text.strip() == '🏢бізнес центр':
         context.update({"object": "БЦ"})
         bot.send_message(message.chat.id, "Назва: Аврора \nВулиця: Академіка Комарова"
-                                          "\nДім: 62а \n№Офіса: 6н")
+                                          "\nДім: 62а \n№Офіса: 6н",
+                         reply_markup=types.ReplyKeyboardRemove())
 
     elif message.text.strip() == 'Інше':
         context.update({"object": "other"})
         bot.send_message(message.chat.id, "Назва: Аврора\nВулиця: Академіка Комарова"
-                                          "\nДім: 62а")
+                                          "\nДім: 62а",
+                         reply_markup=types.ReplyKeyboardRemove())
 
     else:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
