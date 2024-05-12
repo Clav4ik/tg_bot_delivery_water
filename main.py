@@ -16,9 +16,9 @@ ADMIN_ID = [1333538265, 1006078469, 775207817]
 PHONE_NUMBER_ADMIN_str = "0973477073"
 
 apihelper.ENABLE_MIDDLEWARE = True
-
-bot = telebot.TeleBot("")
-
+#6806170010:AAGPkBft-l4LF3ufXev-Db9C5ZKcF9cvOqc
+bot = telebot.TeleBot("7112337088:AAGW4S-bRMK0dhpXx0nvCSdkfU-DCIAkaZM")
+#775207817
 
 @bot.middleware_handler(update_types=['message'])
 def modify_message(bot_instance, message):
