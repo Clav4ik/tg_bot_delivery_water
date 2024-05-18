@@ -3,22 +3,60 @@
 # -*- coding: utf-8 -*-
 import os, sys
 
+import logging
+import flask
 import telebot
 from telebot import types
 from telebot import apihelper
 from Checkers import isvalid_phone_number, isvalid_order, isvalid_address, isvalid_count
 from models import User, Address, Phone_Number, Black_List, Token_Unblock
 
+API_TOKEN = ""
+
 CHAT_OUTPUT = -4125418031
 ADMIN_GROUP_ID = -4192581904
 ADMIN_ID = [1333538265, 1006078469, 775207817]
 
-PHONE_NUMBER_ADMIN_str = "0973477073"
+PHONE_NUMBERs_ADMIN = {
+    "Julie_tel_number":"0677000472",
+    "Roman_tel_number":"0973477073"
+}
+WEBHOOK_HOST = ''
+WEBHOOK_PORT = 8443  # 443, 80, 88 or 8443 (port need to be 'open')
+#WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
+
+#WEBHOOK_SSL_CERT = './webhook_cert.pem'  # Path to the ssl certificate
+#WEBHOOK_SSL_PRIV = './webhook_pkey.pem'  # Path to the ssl private key
+#DOMAIN = '1.2.3.4' # either domain, or ip address of vps
+
+
+app = flask.Flask(__name__)
+
+WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
+WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
+
+logger = telebot.logger
+telebot.logger.setLevel(logging.INFO)
+
+@app.route("/", methods=['GET', 'HEAD'])
+def hello():
+    return '<img src="https://i.gifer.com/6oa.gif" alt="">'
+
+@app.route(WEBHOOK_URL_PATH, methods=['POST'])
+def webhook():
+    if flask.request.headers.get('content-type') == 'application/json':
+        json_string = flask.request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+    else:
+        flask.abort(403)
+
 
 apihelper.ENABLE_MIDDLEWARE = True
-
-bot = telebot.TeleBot("")
-
+#6806170010:AAGPkBft-l4LF3ufXev-Db9C5ZKcF9cvOqc
+bot = telebot.TeleBot(API_TOKEN, threaded=False)
+#775207817
 
 @bot.middleware_handler(update_types=['message'])
 def modify_message(bot_instance, message):
@@ -39,7 +77,9 @@ def modify_message(bot_instance, message):
 
         bot.delete_message(message.chat.id, message.id)
         bot.send_message(message.chat.id, "Ви заблоковані", reply_markup=types.ReplyKeyboardRemove())
-        bot.send_message(message.chat.id, "Для розблокування зв'яжитесь з менеджером\n"+PHONE_NUMBER_ADMIN_str)
+        bot.send_message(message.chat.id, "Для розблокування зв'яжитесь з менеджером"\
+                                          "\n"+PHONE_NUMBERs_ADMIN.get("Julie_tel_number")+" - Юлія"\
+                                          "\n"+PHONE_NUMBERs_ADMIN.get("Roman_tel_number")+" - Роман")
         bot.register_next_step_handler(message, stock)
 
 def stock(message):
@@ -76,20 +116,23 @@ def helper_out_msg_branch(message):
     return stock(message)
 
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
+def pin_msg_welcome(message):
     if message == None:
         return stock(message)
-
-    pin_msg = bot.send_message(message.chat.id, PHONE_NUMBER_ADMIN_str+' - Роман (доставка)')
+    pin_msgID = bot.send_message(message.chat.id,
+                                 PHONE_NUMBERs_ADMIN.get("Julie_tel_number")+" - Юлія (керівник)\n" +
+                                 PHONE_NUMBERs_ADMIN.get("Roman_tel_number")+' - Роман (доставка)').message_id
     try:
         bot.unpin_all_chat_messages(chat_id=message.chat.id)
     except:
         pass
-    bot.pin_chat_message(chat_id=message.chat.id, message_id=pin_msg.message_id)
+    bot.pin_chat_message(chat_id=message.chat.id, message_id=pin_msgID)
+    bot.register_next_step_handler(message, send_welcome)
 
+def send_welcome(message):
     with open("FirstPictureInfo.jpg", "rb") as file:
         bot.send_photo(message.chat.id, photo=file.read())
-
+    print("User id == "+str(message.from_user.id))
     print("Chat id =="+str(message.chat.id))
 
     text = "Доставка води м. Одеса \nЗвичайне замовлення бутлів 18,9л формується на наступний день. " \
@@ -98,7 +141,6 @@ def send_welcome(message):
     bcBtn = types.KeyboardButton('🏢бізнес центр')
     cBtn = types.KeyboardButton("☕кав'ярня")
     othersBtn = types.KeyboardButton('Інше')
-
 
     markup.add(bcBtn, cBtn, othersBtn)
     bot.send_message(message.chat.id, text, reply_markup=markup)
@@ -868,6 +910,19 @@ def to_ban_acc(message):
 
 
 if __name__ == "__main__":
-    bot.infinity_polling()
+#bot.infinity_polling()
+    #bot.remove_webhook()
+    # import time
+    # time.sleep(0.1)
 
+    # Set webhook
+    #bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
+                   # certificate=open(WEBHOOK_SSL_CERT, 'r'))
+
+    # Start flask server
+    app.run()
+    # app.run(host=WEBHOOK_LISTEN,
+    #         port=WEBHOOK_PORT,
+    #         ssl_context=(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV),
+    #         debug=True)
 
