@@ -54,7 +54,7 @@ def webhook():
 
 
 apihelper.ENABLE_MIDDLEWARE = True
-#6806170010:AAGPkBft-l4LF3ufXev-Db9C5ZKcF9cvOqc
+
 bot = telebot.TeleBot(API_TOKEN, threaded=False)
 #775207817
 
@@ -474,12 +474,12 @@ def check_order(message, context):
     text_order = "Заявка: \nТелефон: "+context.get("phone_number")+"\nНазва: "+typ+" "+address.name+\
                  "\nВулиця: "+address.street+"\nДім: "+address.house_num
 
-    if context.get("office_num"):
+    if typ == "БЦ":
         text_order+= "\n№Офіса: "+address.office_num
 
     text_order+= "\nКількість: "+msg
 
-    bot.send_message(message.chat.id, text_order,reply_markup=markup)
+    bot.send_message(message.chat.id, text_order, reply_markup=markup)
 
     context.update({"text":text_order})
     bot.register_next_step_handler(message, complite, context)
